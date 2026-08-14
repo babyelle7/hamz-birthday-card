@@ -144,16 +144,20 @@
     width: 78%;
     border-radius: 3px;
     box-shadow: 0 6px 14px rgba(0,0,0,0.35);
-    transition: transform 0.55s cubic-bezier(.34,1.3,.4,1), box-shadow 0.55s ease;
-    transform: translate(-50%, -50%) translate(-26%, 44%) rotate(-5deg) scale(0.52);
+    transition: transform 0.55s cubic-bezier(.34,1.3,.4,1), opacity 0.4s ease, box-shadow 0.55s ease;
+    transform: translate(-50%, -50%) translate(-26%, 44%) rotate(-8deg) scale(0.08);
+    opacity: 0;
     z-index: 2;
     cursor: pointer;
+    pointer-events: none;
   }
   .letter-img img { width: 100%; display: block; border-radius: 3px; }
   .letter-page.lifted .letter-img {
     transform: translate(-50%, -50%) translate(0, 0) rotate(0deg) scale(1);
     box-shadow: 0 22px 45px rgba(0,0,0,0.55);
     width: 84%;
+    opacity: 1;
+    pointer-events: auto;
   }
 
   /* ---------- CAKE PAGE ---------- */
@@ -207,16 +211,12 @@
     touch-action: manipulation;
     -webkit-tap-highlight-color: transparent;
   }
-  .play-btn.armed {
-    box-shadow: 0 0 0 4px rgba(255,210,63,0.9), 0 0 14px 6px rgba(255,210,63,0.6);
-    border-radius: 50%;
-  }
   .play-btn:active { transform: translate(-50%, -50%) scale(0.92); }
 
   .meter-wrap {
     position: absolute;
     left: 50%;
-    top: 94.2%;
+    top: 95.5%;
     transform: translateX(-50%);
     width: 42%;
     height: 2.2%;
@@ -231,26 +231,6 @@
     width: 0%;
     background: linear-gradient(90deg, #ffd23f, #e0524a);
     transition: width 0.06s linear;
-  }
-
-  .mic-note {
-    position: absolute;
-    left: 50%;
-    top: 97.4%;
-    transform: translate(-50%, -50%);
-    font-size: clamp(6.5px, 1.05vw, 9px);
-    color: #3a2b12;
-    background: rgba(255,255,255,0.8);
-    padding: 2px 7px;
-    border-radius: 9px;
-    font-family: sans-serif;
-    z-index: 4;
-    max-width: 94%;
-    text-align: center;
-    line-height: 1.25;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
   }
 
   /* ---------- WISH OVERLAY ---------- */
@@ -377,7 +357,6 @@
 
           <button class="play-btn" id="playBtn" aria-label="Blow out candles"></button>
           <div class="meter-wrap"><div class="meter-fill" id="meterFill"></div></div>
-          <div class="mic-note" id="micNote">Tap ▶, blow into your mic — or hold ▶ / Space</div>
 
           <div class="wish-overlay" id="wishOverlay">
             <div class="wish-bubble">
@@ -407,7 +386,6 @@
   const flames = [0,1,2,3].map(i => document.getElementById('flame'+i));
   const playBtn = document.getElementById('playBtn');
   const meterFill = document.getElementById('meterFill');
-  const micNote = document.getElementById('micNote');
   const wishOverlay = document.getElementById('wishOverlay');
   const relightBtn = document.getElementById('relightBtn');
   const confettiLayer = document.getElementById('confettiLayer');
@@ -423,14 +401,14 @@
   backBtn.addEventListener('click', closeBook);
 
   // ---------- LETTER TUCK / LIFT ----------
+  // Letter is fully hidden until the envelope page is tapped, then it flies out.
+  // Tapping again (on the letter, or elsewhere on the page) tucks it away.
   letterImg.addEventListener('click', function(e){
     e.stopPropagation();
-    letterPage.classList.toggle('lifted');
+    letterPage.classList.remove('lifted');
   });
   letterPage.addEventListener('click', function(){
-    if (letterPage.classList.contains('lifted')) {
-      letterPage.classList.remove('lifted');
-    }
+    letterPage.classList.toggle('lifted');
   });
 
   // ---------- CANDLE BLOWING ----------
@@ -457,7 +435,6 @@
   async function startMic(){
     if (micActive) return true;
     if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-      micNote.textContent = "No mic access here (needs HTTPS). Hold ▶ or Space to blow instead!";
       return false;
     }
     try {
@@ -471,11 +448,8 @@
       dataArray = new Uint8Array(analyser.fftSize);
       source.connect(analyser);
       micActive = true;
-      playBtn.classList.add('armed');
-      micNote.textContent = "Listening — blow into your mic!";
       return true;
     } catch (err) {
-      micNote.textContent = "Mic blocked (needs HTTPS + permission). Hold ▶ or Space to blow instead!";
       return false;
     }
   }
